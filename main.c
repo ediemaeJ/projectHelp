@@ -13,33 +13,30 @@ forgetting about).
 * -Maybe planet jpegs if possible?
 */
 
-//#include <SDL2/SDL.h>
-//#include <SDL2/SDL_ttf.h> //requires libfreetype6-dev
-#include <math.h>
-#include <stdbool.h>
-//#include <time.h>
-
 #include "render_text.h"
 #include "time_calc.h"
+#include <math.h>
+#include <stdbool.h>
 
 #define PLANETS 8
 #define PI 3.1415926535897932384626433832795
 #define MY_FONT                                                                \
   "/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf" // CHECK TO MAKE
                                                             // SURE THE DEFAULT
-                                                            // PI HAS IT I DIDN'T
-                                                            // INSTALL ANY FONTS
-                                                            // AND IT WAS THERE.
+                                                            // PI HAS IT I
+                                                            // DIDN'T INSTALL
+                                                            // ANY FONTS AND IT
+                                                            // WAS THERE.
 #define WIDTH 1920
 #define HEIGHT 1080
 int drawHeight = 0; //(just for me) 1080 / 4 = 270 so from 265 to 275 draw lines
-                    //i suppose from width to the right.
+                    // i suppose from width to the right.
 const int drawWidth =
     (WIDTH -
      (WIDTH /
       6)); // this should be 1/6 of the screen over for the white lines/layout
-           // for text on the right side of the screen. (for me. It would be 1680
-           // (1675-1685)at the moment for the functions).
+           // for text on the right side of the screen. (for me. It would be
+           // 1680 (1675-1685)at the moment for the functions).
 bool layout = false;
 const int textWidth = drawWidth + 10; // the width on the monitor where the text
                                       // will be for the date parameters.
@@ -48,6 +45,9 @@ int plusCalc, minusCalc;
 bool button = false;
 bool setup = false; // this will draw the constant things like text and the sun.
                     // (eventually) and then go true.
+                    
+                    
+                      int center[2]; // int center as an array for the center of the screen.
 
 typedef struct {
   const char *name;
@@ -70,10 +70,37 @@ void CircleFunction(SDL_Renderer *render, int x, int y, int r,
     }
   }
 }
+
+void clearPrev(SDL_Renderer *renderer, TTF_Font *font, const char *current, const char *future, const char *past, int textWidth) {
+
+	int horizontalLines[]= {270, 540, 810}; 
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    
+    SDL_RenderDrawLine(renderer, drawWidth, 1, drawWidth, HEIGHT);
+    
+    for(int i = 0; i < 3; i++){
+        SDL_RenderDrawLine(renderer, drawWidth, horizontalLines[i], WIDTH, horizontalLines[i]);
+    }
+
+    CircleFunction(renderer, center[0], center[1], 25,
+                   (SDL_Color){255, 255, 0, 255});
+    RenderText(renderer, font, current, future, past, textWidth);
+	
+	return;
+}
+
+
+
+
+
 void updatePosition(Planet *p) {
-  p->angle += p->speed;  // updates the angle relative to the speed.
-  if (p->angle > 2 * PI) // ensures that the angle doesn't exceed 2 * PI since
-                         // that's a full revolution and subtracts 2*PI if it is.
+  p->angle += p->speed; // updates the angle relative to the speed.
+  if (p->angle >
+      2 * PI) // ensures that the angle doesn't exceed 2 * PI since
+              // that's a full revolution and subtracts 2*PI if it is.
     p->angle -= 2 * PI;
 }
 
@@ -116,7 +143,8 @@ int main() {
 
   Planet planets[] = {
       // Initialize the planets with distance from sun, initial angle (based
-      // upon real time), orbit speed, size and colour. //REMEMBER TO CHANGE BACK
+      // upon real time), orbit speed, size and colour. //REMEMBER TO CHANGE
+      // BACK
       // TO REAL TIME THIS IS FAST FOR TESTING.
       {"Mercury", 60, 0, 0.05, 4, {183, 184, 185, 255}},
       {"Venus", 100, 0, 0.01667, 6, {248, 226, 176, 255}},
@@ -133,19 +161,8 @@ int main() {
 
     if (angleCalculated < 0)
       angleCalculated += 2 * PI;
-
-    /*  remove this part redundant    */
-    // if (angleCalculated < 0){
-    // angleCalculated+= 360.0;
-    //}
     planets[i].angle = angleCalculated;
   }
-
-  // TIME CALCULATIONS HAS TO BE INTEGRATED DOESN'T DO ANYTHING AT THE MOMENT
-  // BESIDES SPIT OUT 50 DAYS IN THE FUTURE/PAST IN CONSOLE.
-
-  // 25 characters should be more than enough for example Jan 01 2026 would be
-  // 12 in length and adding time would be 06:00 would be 18
 
   char current[25];
   char future[25];
@@ -153,22 +170,8 @@ int main() {
   char simulated[25];
   int plusDays, minusDays;
 
-  // CURRENTLY SET TO +/-50 DAYS FROM CURRENT DAY CAN UNCOMMENT BELOW AND REMOVE
-  // THE PLUSDAYS AND MINUSDAYS BELOW TO TRY DIFFERENT DAYS.
-
-  // current calc will have to get the code for the potentiometers to implement
-  // properly.
   plusDays = 50;
   minusDays = 50;
-
-  // DEBUGGING FOR MANUAL ENTRY IF WANTED (which will be used with pots for
-  // debugging).
-  /*printf("Enter number of days to add (+): ");
-  scanf("%d", &plusDays);
-
-  printf("Enter number of days to subtract (-): ");
-  scanf("%d", &minusDays);
-      */
 
   timeCalculation(current, future, past, plusDays, minusDays);
 
@@ -184,7 +187,7 @@ int main() {
   bool running = true; // set running to true this will keep the program running
                        // until it's closed within the while loop below.
   SDL_Event event;
-  int center[2]; // int center as an array for the center of the screen.
+  //int center[2]; // int center as an array for the center of the screen.
   center[0] =
       drawWidth / 2; // makes it the center of the area without text since the
                      // drawWidth is to the left of where the lines are drawn.
@@ -195,50 +198,44 @@ int main() {
   TTF_Font *font =
       TTF_OpenFont(MY_FONT, 24); // big font for areas with no area constraints.
 
-  SDL_Color textColour = {255, 255, 255, 255}; // white color
+  // SDL_Color textColour = {255, 255, 255, 255}; // white color
 
-  // THIS FUNCTION WILL SET THE ANGLE STARTING AT MINUSDAYS WILL SIMULATE TO
-  // FINISH DAY WITH A 500MS DELAY IT PROBABLY WON'T WORK RIGHT NOW HAVE TO
-  // CHANGE DAY AND ANGLE CALCS
-  // HAVE TO ADD QUIT COMMAND TO FUNCTION AS WELL FOR Q AND ESCAPE WITH DELAY
-  // FUNCTION.
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0,
-                           255); // Clear the window so it becomes black.
-    SDL_RenderClear(renderer);   // clear the renderer so there is no black
-                               // leftover or any issues that may come with that.
-    SDL_SetRenderDrawColor(
-        renderer, 255, 255, 255,
-        255); // white colour WILL HAVE TO FIX MAGIC NUMBERS BELOW.
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0,
+                         255); // Clear the window so it becomes black.
+  SDL_RenderClear(renderer);   // clear the renderer so there is no black
+                             // leftover or any issues that may come with that.
+  SDL_SetRenderDrawColor(
+      renderer, 255, 255, 255,
+      255); // white colour WILL HAVE TO FIX MAGIC NUMBERS BELOW.
 
-    // Draw lines on the right side of the screen (will get rid of magic
-    // numbers)
-    SDL_RenderDrawLine(renderer, drawWidth, 1, drawWidth, HEIGHT);
-    drawHeight = 270;
-    SDL_RenderDrawLine(renderer, drawWidth, drawHeight, WIDTH, drawHeight);
-    drawHeight = 540;
-    SDL_RenderDrawLine(renderer, drawWidth, drawHeight, WIDTH, drawHeight);
-    drawHeight = 810;
-    SDL_RenderDrawLine(renderer, drawWidth, drawHeight, WIDTH, drawHeight);
-    
-        CircleFunction(
-        renderer, center[0], center[1], 25,
-        (SDL_Color){255, 255, 0,
-                    255}); 
-                       renderTextStatic(renderer, font, textWidth);
-                          RenderText(renderer, font, current, future, past, textWidth);
-    
+  // Draw lines on the right side of the screen (will get rid of magic
+  // numbers)
+  SDL_RenderDrawLine(renderer, drawWidth, 1, drawWidth, HEIGHT);
+  drawHeight = 270;
+  SDL_RenderDrawLine(renderer, drawWidth, drawHeight, WIDTH, drawHeight);
+  drawHeight = 540;
+  SDL_RenderDrawLine(renderer, drawWidth, drawHeight, WIDTH, drawHeight);
+  drawHeight = 810;
+  SDL_RenderDrawLine(renderer, drawWidth, drawHeight, WIDTH, drawHeight);
+
+  CircleFunction(renderer, center[0], center[1], 25,
+                 (SDL_Color){255, 255, 0, 255});
+  renderTextStatic(renderer, font, textWidth);
+  RenderText(renderer, font, current, future, past, textWidth);
+
+    button = true;
   while (running) {
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
         running = false;
-      } else if (event.type == SDL_KEYDOWN) { 
-        if (event.key.keysym.sym == SDLK_q || event.key.keysym.sym == SDLK_ESCAPE) {
+      } else if (event.type == SDL_KEYDOWN) {
+        if (event.key.keysym.sym == SDLK_q ||
+            event.key.keysym.sym == SDLK_ESCAPE) {
           running = false;
         }
       }
     }
-
-
+    clearPrev(renderer, font, current, future, past, textWidth); 
 
     if (!font) { // checks to make sure it can get the font. //IF USING MED FONT
                  // AT SOME POINT WILL HAVE TO ADD THAT CHECK
@@ -250,32 +247,28 @@ int main() {
     // TEXT RENDERER for all besides simulated.
 
     RenderText(renderer, font, current, future, past, textWidth);
-    //CircleFunction(
-        //renderer, center[0], center[1], 25,
-        //(SDL_Color){255, 255, 0,
-                    //255}); 
-    button = true;
+
     if (button == true) {
       simulated[0] = "\0";
       int start = daysSinceEpoch - minusDays;
       int finish = daysSinceEpoch + plusDays;
 
       while (start < finish) {
-          
-          while(SDL_PollEvent(&event)){
-              if(event.type == SDL_QUIT) {
-                  running = false; 
-              }
-           else if(event.type == SDL_KEYDOWN){
-              if(event.key.keysym.sym == SDLK_q || event.key.keysym.sym == SDLK_ESCAPE){
-                  running = false; 
-              }
+              clearPrev(renderer, font, current, future, past, textWidth); 
+        while (SDL_PollEvent(&event)) {
+          if (event.type == SDL_QUIT) {
+            running = false;
+          } else if (event.type == SDL_KEYDOWN) {
+            if (event.key.keysym.sym == SDLK_q ||
+                event.key.keysym.sym == SDLK_ESCAPE) {
+              running = false;
+            }
           }
-              
-          }
-          
-          if(!running) break; /*** fix syntax***/ 
-          
+        }
+
+        if (!running)
+          break; /*** fix syntax***/
+
         for (int i = 0; i < PLANETS; i++) {
           planets[i].angle = 0;
           double angleCalculated = fmod(start * planets[i].speed, 360);
@@ -296,6 +289,7 @@ int main() {
                        // 33 for 30fps and it will still be fairly smooth.
         simulatedDays = simulatedDays + SECONDS_IN_DAY;
         formatDate(simulatedDays, simulated);
+        button = false; 
       }
     }
     if (button == false) {
